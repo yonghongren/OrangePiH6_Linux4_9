@@ -41,6 +41,8 @@
 #define EPHY_CTRL 0x6000
 #define EPHY_SID 0x8004
 
+#define WAIT_MAX_COUNT 10
+
 /* Register bits */
 #define EXTEPHY_CTRL0_RESET_INVALID	(0x1 << 0)
 #define EXTEPHY_CTRL0_SYSCLK_GATING	(0x1 << 1)
@@ -220,13 +222,18 @@ static void sunxi_ephy_enable(struct ephy_res *priv)
 {
 #ifdef CONFIG_MFD_ACX00
 	int value;
+	unsigned char i = 0;
 #if defined(CONFIG_ARCH_SUN50IW6)
 	u16 ephy_cali = 0;
 #endif
 
 	if (!acx00_enable()) {
-		msleep(50);
-		if (!acx00_enable()) {
+		for (i = 0; i < WAIT_MAX_COUNT; i++) {
+			msleep(10);
+			if (acx00_enable())
+				break;
+		}
+		if (i == WAIT_MAX_COUNT) {
 			pr_err("acx00 is no enable, and sunxi_ephy_enable is fail\n");
 			return;
 		}

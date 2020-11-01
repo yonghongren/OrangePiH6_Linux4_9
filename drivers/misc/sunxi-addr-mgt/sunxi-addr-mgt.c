@@ -130,7 +130,7 @@ static ssize_t addr_wifi_show(struct class *class,
 		return 0;
 	}
 
-	return sprintf(buffer, "%s", info.addr_wifi);
+	return sprintf(buffer, "%.17s\n", info.addr_wifi);
 }
 
 static ssize_t addr_bt_show(struct class *class,
@@ -142,7 +142,7 @@ static ssize_t addr_bt_show(struct class *class,
 		return 0;
 	}
 
-	return sprintf(buffer, "%s", info.addr_bt);
+	return sprintf(buffer, "%.17s\n", info.addr_bt);
 }
 
 static ssize_t addr_eth_show(struct class *class,
@@ -154,7 +154,7 @@ static ssize_t addr_eth_show(struct class *class,
 		return 0;
 	}
 
-	return sprintf(buffer, "%s", info.addr_eth);
+	return sprintf(buffer, "%.17s\n", info.addr_eth);
 }
 
 static ssize_t addr_wifi_store(struct class *class,
@@ -282,7 +282,7 @@ static int addr_init(void)
 		addr_parse(info.addr_wifi, 1))) {
 		hash_buf[0] &= 0xFC;
 		memset(info.addr_wifi, 0x0, BUFF_MAX);
-		sprintf(info.addr_wifi, "%02X:%02X:%02X:%02X:%02X:%02X\n",
+		sprintf(info.addr_wifi, "%02X:%02X:%02X:%02X:%02X:%02X",
 			hash_buf[0], hash_buf[1], hash_buf[2],
 			hash_buf[3], hash_buf[4], hash_buf[5]);
 	}
@@ -293,7 +293,7 @@ static int addr_init(void)
 		((info.type_addr_bt == TYPE_ANY) &&
 		addr_parse(info.addr_bt, 0))) {
 		memset(info.addr_bt, 0x0, BUFF_MAX);
-		sprintf(info.addr_bt, "%02X:%02X:%02X:%02X:%02X:%02X\n",
+		sprintf(info.addr_bt, "%02X:%02X:%02X:%02X:%02X:%02X",
 			hash_buf[0], hash_buf[1], hash_buf[2],
 			hash_buf[3], hash_buf[4], hash_buf[5]);
 	}
@@ -305,7 +305,7 @@ static int addr_init(void)
 		addr_parse(info.addr_eth, 1))) {
 		hash_buf[0] &= 0xFC;
 		memset(info.addr_eth, 0x0, BUFF_MAX);
-		sprintf(info.addr_eth, "%02X:%02X:%02X:%02X:%02X:%02X\n",
+		sprintf(info.addr_eth, "%02X:%02X:%02X:%02X:%02X:%02X",
 			hash_buf[0], hash_buf[1], hash_buf[2],
 			hash_buf[3], hash_buf[4], hash_buf[5]);
 	}
@@ -376,11 +376,15 @@ static int __init addr_mgt_init(void)
 	info.type_addr_bt   = DEF_TYPE_ADDR_BT;
 	info.type_addr_eth  = DEF_TYPE_ADDR_ETH;
 #ifdef __USE_DTB_CTRL
-	platform_driver_probe(&addr_mgt_driver, addr_mgt_probe);
+	status = platform_driver_probe(&addr_mgt_driver, addr_mgt_probe);
+	if (status < 0) {
+		ADDR_MGT_ERR("driver probe error, status: %d.", status);
+		return -1;
+	}
 #endif
 	status = class_register(&addr_class);
 	if (status < 0) {
-		ADDR_MGT_ERR("err, status: %d.", status);
+		ADDR_MGT_ERR("class register error, status: %d.", status);
 		return -1;
 	}
 	ADDR_MGT_DBG("success.");
