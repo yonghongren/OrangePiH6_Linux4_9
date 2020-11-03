@@ -289,7 +289,7 @@ static int set_gpu_freq_safe(unsigned long freq /* Hz */)
 static int get_gpu_power(void)
 {
 	sunxi_regulator = regulator_get(NULL, "vdd-gpu");
-	if (sunxi_regulator == NULL) {
+	if (IS_ERR(sunxi_regulator)) {
 		sunxi_err("failed to get the GPU regulator!\n");
 		return -EPERM;
 	}
